@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include "stm32f10x.h"
 
+extern volatile unsigned int SysTime;//系统心跳
+
+
 //具体实现思想,参考<<CM3权威指南>>第五章(87页~92页).
 //IO口操作宏定义
 #define BITBAND(addr, bitnum) ((addr & 0xF0000000)+0x2000000+((addr &0xFFFFF)<<5)+(bitnum<<2)) 
@@ -55,6 +58,7 @@ void MSR_MSP(uint32_t addr);
 void CPU_IntDis (void);
 void CPU_IntEn (void);
 
+void delay_init(void);
 void delay_ms(unsigned int ms);
 void delay_us(unsigned int us);
 void Stm32_Clock_Init(unsigned char SYS_CLOCK);
