@@ -32,11 +32,11 @@ void delay_init(void)
     SysTime = 0;
     //配置滴答定时器
     SysTick_Config(SystemCoreClock / 1000);//1ms中断一次
-    fan_ms = SysTick->LOAD;//取基数
-    if(fan_ms > 1000)
-        fan_us = fan_ms / 1000;
+    fac_ms = SysTick->LOAD;//取基数
+    if(fac_ms > 1000)
+        fac_us = fac_ms / 1000;
     else
-        fan_us = 1;
+        fac_us = 1;
 }
 
 
@@ -58,7 +58,7 @@ void delay_ms(unsigned int ms)
     //延时差不多达标，但又没完全达标
     while(1)
     {//既然程序能走到这里，SysTick->VAL的值一定等于fan_ms，或者稍微比它小一点
-        if((SysTick->VAL + first_val) <= fam_ms)//差就差在这里
+        if((SysTick->VAL + first_val) <= fac_ms)//差就差在这里
             break;//即使没有初始化定时器也能退出
     }
 }
@@ -75,23 +75,23 @@ void delay_us(unsigned int us)
     
     if(us >= 1000)//超过1ms
     {
-        ms += (us / 1000 + Systime);
+        ms += (us / 1000 + SysTime);
         us %= 1000;//求余
         delay_ms(ms);//机智
         ms = 1;//标志一下
     }
     
-    us *= fan_us;//取滴答定时器延时x us的实际值
+    us *= fac_us;//取滴答定时器延时x us的实际值
     if(us > first_val)
     {
         ms = SysTime + 1;
         while(ms <= SysTime);//等待定时器重置
-        first_val = fan_ms;//这里fan_ms用SysTick->LOAD更标准
+        first_val = fac_ms;//这里fan_ms用SysTick->LOAD更标准
     }
     //到了这里SysTick->Val一定不会比us小
     us = first_val - us;//定时器计数到这，就表示延时完成
     while(SysTick->VAL > us)//等待最后延时
-        if(SysTick->VAL > first)//小概率
+        if(SysTick->VAL > first_val)//小概率
             break;
     //10 10 0
 }
