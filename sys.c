@@ -65,35 +65,34 @@ void delay_ms(unsigned int ms)
 
 //要求：系统时钟大于10MHz
 //微秒延时
+//2022-09-07:延时超过500us会丢失12us，例如延时500us，实际只延时了488us
 void delay_us(unsigned int us)
 {
     unsigned int first_val = SysTick->VAL;//记录刚进来的时候定时器的值
-    unsigned int ms = 0;
+    unsigned int ms = SysTime;
     
     if(us == 0)
         return;
     
     if(us >= 1000)//超过1ms
     {
-        ms += (us / 1000 + SysTime);
+        delay_ms(us / 1000);//机智
+        ms = SysTime;//更新时间
         us %= 1000;//求余
-        delay_ms(ms);//机智
-        ms = 1;//标志一下
     }
     
     us *= fac_us;//取滴答定时器延时x us的实际值
     if(us > first_val)
     {
-        ms = SysTime + 1;
-        while(ms <= SysTime);//等待定时器重置
+        ms ++;
+        while(ms > SysTime);//等待定时器重置
+        us -= first_val;
         first_val = fac_ms;//这里fan_ms用SysTick->LOAD更标准
     }
     //到了这里SysTick->Val一定不会比us小
     us = first_val - us;//定时器计数到这，就表示延时完成
-    while(SysTick->VAL > us)//等待最后延时
-        if(SysTick->VAL > first_val)//小概率
-            break;
-    //10 10 0
+    while(SysTick->VAL > us);//等待最后延时
+    //us = SysTick->VAL;
 }
 
 //滴答定时器中断函数
